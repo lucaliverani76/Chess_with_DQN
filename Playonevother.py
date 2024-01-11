@@ -33,13 +33,13 @@ mechturk=False
 
 
 
-Player1_white=Chessx.DQNAgent_morebrain(Chessx.params).to(Chessx.params['device'])
-# Player1_white.wpath="DQNAgent_10_training_loops.pthx"
+Player1_white=Chessx.DQNAgent(Chessx.params).to(Chessx.params['device'])
+Player1_white.wpath="DQNAgent.pthx"
 Player1_white.loadWeights()
 
 
 Player2_black=Chessx.DQNAgent(Chessx.params).to(Chessx.params['device'])
-# Player2_black.wpath="DQNAgent_morebrain_20_training_loops.pthx"
+Player2_black.wpath="DQNAgent.pthx"
 Player2_black.loadWeights()
 
 
@@ -49,23 +49,6 @@ def Convertsvgtonp(svg_data):
     return np.array(image)
 
 
-def flip_ranks(board):
-    # Convert the board to FEN string
-    fen = board.fen()
-
-    # Split the FEN string into its components
-    pieces, turn, castling, en_passant, halfmove, fullmove = fen.split(' ')
-
-    # Reverse the order of the ranks and files
-    pieces = '/'.join([''.join(reversed(rank)) for rank in pieces.split('/')])
-
-    # Construct the new FEN string
-    new_fen = f"{pieces} {turn} {castling} {en_passant} {halfmove} {fullmove}"
-
-    # Create a new board with the flipped ranks and files
-    new_board = chess.Board(fen=new_fen)
-
-    return new_board
 
 moves=collections.deque(maxlen=12)# I try to avoi moves repetition
 def choosemove(valuesofmoves,possible_actions):
@@ -105,11 +88,17 @@ def display_match(Model1, Model2, steps=1000):
                 # print("white")
                 # print(rew)
                 # print("______")
+                TTT=np.vstack((rew[:,0],possible_actions))
+                print(TTT.T)
+
 
             S=Chessx.Implement_action(S,possible_actions[choosemove(rew,possible_actions)])
+            
+            print("white")
+            print(Chessx.Reward(S)*1000)
 
         else:
-            mirrored_board = flip_ranks(board.mirror())
+            mirrored_board = Chessx.flip_ranks(board.mirror())
             S_black=Chessx.fromChesstoS(mirrored_board)
             possible_actions=Chessx.PossibleActions(S_black)
             
@@ -121,11 +110,16 @@ def display_match(Model1, Model2, steps=1000):
                 # print(rew)
 
             # choosemove(rew)
+            
 
 
             mirrored_board.push_san(possible_actions[choosemove(rew,possible_actions)])    
-            re_mirrored_board = flip_ranks(mirrored_board.mirror())
+            re_mirrored_board = Chessx.flip_ranks(mirrored_board.mirror())
             S=Chessx.fromChesstoS(re_mirrored_board)
+            print("black")
+            print(Chessx.Reward(S)*1000)
+            print(S.score[0]*1000)
+            print("_________")
             
 
             
@@ -146,7 +140,7 @@ def display_match(Model1, Model2, steps=1000):
         
         cv2.imshow("Chess Board", open_cv_image)
         
-        cv2.waitKey(1000)  # Adjust the delay (in milliseconds)
+        cv2.waitKey(3000)  # Adjust the delay (in milliseconds)
 
         # x=input()
         
