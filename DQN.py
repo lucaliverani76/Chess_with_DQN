@@ -145,7 +145,7 @@ N_minibatch_sampling=1000
 
 n_tests_on_batch=int(N/N_minibatch_sampling*1.5)
 
-N_episodes=2
+N_episodes=20
 
 # weightfile='model_weights_tanh_moreneurons_Hdiscountf'
 
@@ -307,7 +307,7 @@ Chessx.Q_action_value.SaveWeights()
 
 
 # Plot input and output
-output_np = R.detach().numpy()
+output_np = R.detach().cpu().numpy()
 
 R_=reward_s.reshape(-1,1)
 plt.figure(figsize=(10, 5))
