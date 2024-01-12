@@ -141,7 +141,7 @@ N=1000
 
 lambda_=0.3 #discount factor
 
-N_minibatch_sampling=1000
+N_minibatch_sampling=1001
 
 n_tests_on_batch=int(N/N_minibatch_sampling*1.5)
 
