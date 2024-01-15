@@ -127,7 +127,7 @@ print(device)
 # Algorithm DQN
 # =============================================================================
 
-T=50 #number of action steps, or games moves
+T=30 #number of action steps, or games moves
 
 
 epsilon=0.9 #greedy policy
@@ -141,11 +141,11 @@ N=1000
 
 lambda_=0.3 #discount factor
 
-N_minibatch_sampling=1001
+N_minibatch_sampling=500
 
 n_tests_on_batch=int(N/N_minibatch_sampling*1.5)
 
-N_episodes=20
+N_episodes=15
 
 # weightfile='model_weights_tanh_moreneurons_Hdiscountf'
 
@@ -213,17 +213,24 @@ while episode < N_episodes:
                 action=possible_actions[i]
 
             S_next=Chessx.Implement_action(S,action)
-
-            reward=Chessx.Reward(S)
-
-            if not white_has_to_move:  #white has just moved we record the reward of his move hoping that it was a good choice
-                s_=Chessx.initialize_sequences()
-                Chessx.Copy_board_state(s_,S)
-                s_n=Chessx.initialize_sequences()
-                Chessx.Copy_board_state(s_n,S_next)
-                D.append([s_,action,reward,s_n])
-                n=n+1
-                Save_reply_memory()
+            Already_examined=False
+            for S_previous in D:
+                if S_next.loc[0,"board"]==S_previous[0].loc[0,"board"]:
+                    Already_examined=True
+                    n=n+1
+                    
+            
+            if Already_examined==False:
+                reward=Chessx.Reward(S)
+    
+                if not white_has_to_move:  #white has just moved we record the reward of his move hoping that it was a good choice
+                    s_=Chessx.initialize_sequences()
+                    Chessx.Copy_board_state(s_,S)
+                    s_n=Chessx.initialize_sequences()
+                    Chessx.Copy_board_state(s_n,S_next)
+                    D.append([s_,action,reward,s_n])
+                    n=n+1
+                    Save_reply_memory()
 
 
 
@@ -238,7 +245,7 @@ while episode < N_episodes:
 
 
 
-    print("End replay memory")
+    print("End replay memory with dim {}".format(len(D)) )
         # current_replay_memory_ratio=int(np.ceil(len(D)/N_minibatch_sampling))
 
 
@@ -250,8 +257,11 @@ while episode < N_episodes:
         print("Test io  minibatch {0}".format(minibatch_sample))
 
         S_s,action_s,reward_s,S_next_s =Chessx.extract_minibatch(D, N_minibatch_sampling)  #extract data from batch
+        
+        lambda_s=np.zeros((N_minibatch_sampling,1))
+        lambda_s[0:N_minibatch_sampling]=lambda_
 
-        y = (reward_s.reshape(-1,1)+ lambda_* Chessx.Max_Q_target_value(S_next_s).reshape(-1,1)).astype(np.float32)
+        y = (reward_s.reshape(-1,1)+ lambda_s * Chessx.Max_Q_target_value(S_next_s).reshape(-1,1)).astype(np.float32)
         
 
         # trying to optimize the fit between Q_action_value and y
@@ -307,7 +317,7 @@ Chessx.Q_action_value.SaveWeights()
 
 
 # Plot input and output
-output_np = R.detach().cpu().numpy()
+output_np = R.detach().numpy()
 
 R_=reward_s.reshape(-1,1)
 plt.figure(figsize=(10, 5))
@@ -315,7 +325,7 @@ plt.figure(figsize=(10, 5))
 
 plt.plot(output_np, label='NN')
 
-plt.plot(y, label='Q function')
+plt.plot(y, label='Reward with target function')
 plt.plot(R_, label='Rewards')
 
 # plt.plot(action_values_, label='Bo')

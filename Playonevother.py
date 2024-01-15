@@ -33,8 +33,8 @@ mechturk=False
 
 
 
-Player1_white=Chessx.DQNAgent(Chessx.params).to(Chessx.params['device'])
-Player1_white.wpath="DQNAgent.pthx"
+Player1_white=Chessx.DQNAgent_morebrain(Chessx.params).to(Chessx.params['device'])
+# Player1_white.wpath="DQNAgent.pthx"
 Player1_white.loadWeights()
 
 
@@ -140,7 +140,7 @@ def display_match(Model1, Model2, steps=1000):
         
         cv2.imshow("Chess Board", open_cv_image)
         
-        cv2.waitKey(3000)  # Adjust the delay (in milliseconds)
+        cv2.waitKey(1000)  # Adjust the delay (in milliseconds)
 
         # x=input()
         

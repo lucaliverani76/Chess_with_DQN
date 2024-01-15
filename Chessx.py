@@ -174,7 +174,7 @@ def flip_ranks(board):
 def define_parameters():
     params = dict()
 
-    params['learning_rate'] = 0.00001
+    params['learning_rate'] = 0.0001
 
     params['device'] = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -185,6 +185,7 @@ def define_parameters():
 
 
 class DQNAgent(torch.nn.Module):
+    
     def __init__(self, params):
 
         super().__init__()
@@ -194,6 +195,8 @@ class DQNAgent(torch.nn.Module):
         self.first_layer = 200
         self.second_layer = 100
         self.third_layer = 50
+        self.fourth_layer = 1
+        self.fifth_layer = 1
 
 
         self.name="DQNAgent"
@@ -247,9 +250,39 @@ class DQNAgent_morebrain(DQNAgent):
         self.wpath=self.name+".pthx"  
         self.first_layer = 500
         self.second_layer = 800
-        self.third_layer = 50
+        self.third_layer = 500
+        self.fourth_layer = 100
+        self.fifth_layer = 20
         self.inputsize=DATAINPUT_SIZE-1
         self.network()
+        
+    def network(self):
+        super().network()
+        # Layers
+        self.f1 = nn.Linear(self.inputsize, self.first_layer)
+        self.f2 = nn.Linear(self.first_layer, self.second_layer)
+        self.f3 = nn.Linear(self.second_layer, self.third_layer)
+        self.f4 = nn.Linear(self.third_layer, self.fourth_layer)
+        self.f5 = nn.Linear(self.fourth_layer, self.fifth_layer)
+        self.f6 = nn.Linear(self.fifth_layer, 1)
+        
+        
+    def forward(self, x):
+        
+        x_first = x[:,:-1]
+
+
+        # Extract the last element
+        x_last = x[:,-1].view(-1,1)
+
+        #y = torch.tanh(self.f1(x_first))
+        y = F.elu(self.f1(x_first))
+        y= F.elu(self.f2(y))
+        y = F.elu(self.f3(y)) #*x_last
+        y = F.elu(self.f4(y)) #*x_last
+        y = F.elu(self.f5(y)) #*x_last
+        y = self.f6(y)
+        return y
         
 
 
@@ -346,7 +379,7 @@ def Max_Q_target_value(Ss):
         possible_actions=PossibleActions(S_black)
             
 
-        if (possible_actions==[] or possible_actions==None):
+        if (possible_actions==[] or possible_actions==None) or (np.abs(S_black.loc[0,"score"])>0.0015):
             Max_Q_t_values.append(0)
             continue
         target_values =eval_Q_target_value(S_black,possible_actions)
@@ -387,7 +420,7 @@ def OptimizeQ_action_value(S_s,y):
     # print(x_data.shape)
     agent.train()
     torch.set_grad_enabled(True)
-    num_epochs = 100
+    num_epochs = 10
     for epoch in range(num_epochs):
         output=agent.forward(x_data)
 
