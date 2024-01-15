@@ -248,8 +248,8 @@ class DQNAgent_morebrain(DQNAgent):
         
         self.name="DQNAgent_morebrain"
         self.wpath=self.name+".pthx"  
-        self.first_layer = 500
-        self.second_layer = 800
+        self.first_layer = 1000
+        self.second_layer = 1600
         self.third_layer = 500
         self.fourth_layer = 100
         self.fifth_layer = 20
