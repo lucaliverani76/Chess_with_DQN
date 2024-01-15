@@ -317,7 +317,7 @@ Chessx.Q_action_value.SaveWeights()
 
 
 # Plot input and output
-output_np = R.detach().numpy()
+output_np = R.detach().cpu().numpy()
 
 R_=reward_s.reshape(-1,1)
 plt.figure(figsize=(10, 5))
