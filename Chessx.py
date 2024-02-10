@@ -174,7 +174,8 @@ def flip_ranks(board):
 def define_parameters():
     params = dict()
 
-    params['learning_rate'] = 0.0001
+    #params['learning_rate'] = 0.000001  #arrived to 1.15 e-6
+    params['learning_rate'] =  0.000001
 
     params['device'] = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -248,12 +249,12 @@ class DQNAgent_morebrain(DQNAgent):
         
         self.name="DQNAgent_morebrain"
         self.wpath=self.name+".pthx"  
-        self.first_layer = 1000
-        self.second_layer = 1600
+        self.first_layer = 500
+        self.second_layer = 500
         self.third_layer = 500
         self.fourth_layer = 100
         self.fifth_layer = 20
-        self.inputsize=DATAINPUT_SIZE-1
+        self.inputsize=DATAINPUT_SIZE
         self.network()
         
     def network(self):
@@ -262,7 +263,13 @@ class DQNAgent_morebrain(DQNAgent):
         self.f1 = nn.Linear(self.inputsize, self.first_layer)
         self.f2 = nn.Linear(self.first_layer, self.second_layer)
         self.f3 = nn.Linear(self.second_layer, self.third_layer)
+        self.f31 = nn.Linear(self.third_layer, self.third_layer)
+        self.f32 = nn.Linear(self.third_layer, self.third_layer)
         self.f4 = nn.Linear(self.third_layer, self.fourth_layer)
+        self.f41 = nn.Linear(self.fourth_layer, self.fourth_layer)
+        self.f42 = nn.Linear(self.fourth_layer, self.fourth_layer)
+        self.f43 = nn.Linear(self.fourth_layer, self.fourth_layer)
+        self.f44 = nn.Linear(self.fourth_layer, self.fourth_layer)
         self.f5 = nn.Linear(self.fourth_layer, self.fifth_layer)
         self.f6 = nn.Linear(self.fifth_layer, 1)
         
@@ -276,10 +283,16 @@ class DQNAgent_morebrain(DQNAgent):
         x_last = x[:,-1].view(-1,1)
 
         #y = torch.tanh(self.f1(x_first))
-        y = F.elu(self.f1(x_first))
+        y = F.elu(self.f1(x))
         y= F.elu(self.f2(y))
         y = F.elu(self.f3(y)) #*x_last
+        y = F.elu(self.f31(y)) #*x_last
+        y = F.elu(self.f32(y)) #*x_last
         y = F.elu(self.f4(y)) #*x_last
+        y = F.elu(self.f41(y)) #*x_last
+        y = F.elu(self.f42(y)) #* x_last
+        y = F.elu(self.f43(y)) #*x_last
+        y = F.elu(self.f44(y)) #*x_last
         y = F.elu(self.f5(y)) #*x_last
         y = self.f6(y)
         return y
@@ -379,9 +392,14 @@ def Max_Q_target_value(Ss):
         possible_actions=PossibleActions(S_black)
             
 
-        if (possible_actions==[] or possible_actions==None) or (np.abs(S_black.loc[0,"score"])>0.0015):
+        if (possible_actions==[] or possible_actions==None) :
             Max_Q_t_values.append(0)
             continue
+        
+        if (np.abs(S_black.loc[0,"score"])==0.0):
+            Max_Q_t_values.append(0)
+            continue
+        
         target_values =eval_Q_target_value(S_black,possible_actions)
         # print(target_values)
         i=np.argmax(target_values)

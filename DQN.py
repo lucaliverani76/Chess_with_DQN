@@ -9,6 +9,7 @@ import numpy as np
 import collections
 import pickle
 import os
+import pandas as pd
 
 
 import glob
@@ -18,6 +19,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import torch.optim as optim
+from torchvision import models
 
 
 
@@ -82,7 +84,7 @@ def Defineorload_reply_memory(N):
 
     if n>0:
       with open('Replaymemory'+str(n)+'.pickle', 'rb') as handle:
-          D = pickle.load(handle)
+          D = pd.read_pickle(handle)
     else:
         D=collections.deque(maxlen=N)
     return n,D
@@ -131,7 +133,7 @@ T=30 #number of action steps, or games moves
 
 
 epsilon=0.9 #greedy policy
-decay = 0.95
+decay = 0.7
 min_epsilon = 0.2
 
 
@@ -139,7 +141,7 @@ min_epsilon = 0.2
  # initialize replay memory with size N
 N=1000
 
-lambda_=0.3 #discount factor
+lambda_=0.8 #discount factor
 
 N_minibatch_sampling=500
 
@@ -218,10 +220,11 @@ while episode < N_episodes:
                 if S_next.loc[0,"board"]==S_previous[0].loc[0,"board"]:
                     Already_examined=True
                     n=n+1
-                    
             
-            if Already_examined==False:
-                reward=Chessx.Reward(S)
+            reward=Chessx.Reward(S)     
+            
+            if Already_examined==False :#and np.abs(reward)!=0: #and np.abs(reward)<0.007 
+
     
                 if not white_has_to_move:  #white has just moved we record the reward of his move hoping that it was a good choice
                     s_=Chessx.initialize_sequences()
@@ -240,7 +243,7 @@ while episode < N_episodes:
 
             white_has_to_move=not white_has_to_move
 
-            if S.loc[0,"isover"]:
+            if S.loc[0,"isover"] and np.abs(reward)>0.007:
                 break;
 
 
@@ -271,6 +274,8 @@ while episode < N_episodes:
         Savingweights()
 
         minibatch_sample=minibatch_sample+1
+        
+        # Chessx.copyweightsfromto_Q_action_value_to_Q_target_value() #take off eventually
 
 
     minibatch_sample=0
@@ -299,6 +304,9 @@ Chessx.Q_action_value.wpath=Chessx.Q_action_value.name+'.pthx'
 Chessx.Q_action_value.SaveWeights()
 
 
+print(Chessx.Q_action_value)
+
+
 # action_list=[]
 # for Snx in S_s:
 #     v=np.hstack((Snx.board_np[0][0].copy().reshape(1,-1).squeeze(),np.array([Snx.im[0],Snx.ckm[0],Snx.ck[0], Snx.score[0]])))
@@ -317,16 +325,16 @@ Chessx.Q_action_value.SaveWeights()
 
 
 # Plot input and output
-output_np = R.detach().cpu().numpy()
+output_np = R.detach().numpy()
 
 R_=reward_s.reshape(-1,1)
 plt.figure(figsize=(10, 5))
 
 
-plt.plot(output_np, label='NN')
+plt.step(range(len(y)),output_np, label='NN')
 
-plt.plot(y, label='Reward with target function')
-plt.plot(R_, label='Rewards')
+plt.step(range(len(y)),y, label='Reward with target function')
+plt.step(range(len(y)),R_, label='Rewards')
 
 # plt.plot(action_values_, label='Bo')
 plt.title('Input Data')

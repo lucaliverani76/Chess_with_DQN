@@ -38,8 +38,8 @@ Player1_white=Chessx.DQNAgent_morebrain(Chessx.params).to(Chessx.params['device'
 Player1_white.loadWeights()
 
 
-Player2_black=Chessx.DQNAgent(Chessx.params).to(Chessx.params['device'])
-Player2_black.wpath="DQNAgent.pthx"
+Player2_black=Chessx.DQNAgent_morebrain(Chessx.params).to(Chessx.params['device'])
+# Player2_black.wpath="DQNAgent.pthx"
 Player2_black.loadWeights()
 
 
